@@ -30,7 +30,5 @@ RUN chown -R www-data:www-data /var/www/html \
 
 EXPOSE 80
 
-# >>> ОКОНЧАТЕЛЬНОЕ РЕШЕНИЕ ПРОБЛЕМЫ ПРИ СТАРТЕ CONTEXT <<<
-# Переопределяем команду запуска контейнера. Принудительно отключаем модули 
-# прямо перед выполнением основной команды старта веб-сервера (apache2-foreground)
-CMD bash -c "rm -f /etc/apache2/mods-enabled/mpm_event.load /etc/apache2/mods-enabled/mpm_worker.load && apache2-foreground"
+# ВОТ ЭТА СТРОКА ИСПРАВЛЕНА: стираем абсолютно все файлы конфликтующих модулей перед стартом
+CMD bash -c "rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.* && apache2-foreground"
