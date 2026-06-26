@@ -28,7 +28,10 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type d -exec chmod 755 {} \; \
     && find /var/www/html -type f -exec chmod 644 {} \;
 
-# Заставляем Apache слушать порт, который выдает Railway (по умолчанию 8080 или динамический)
+# >>> ВОТ ЭТА СТРОКА: Выдаем права на папки сессий PHP <<<
+RUN mkdir -p /var/lib/php/sessions && chmod -R 777 /var/lib/php/sessions || true
+
+# Заставляем Apache слушать порт, который выдает Railway
 RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf
 RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites-available/000-default.conf
 
