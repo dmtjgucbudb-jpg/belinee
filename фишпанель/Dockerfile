@@ -14,13 +14,6 @@ RUN docker-php-ext-configure gd --with-jpeg --with-freetype \
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# >>> ЖЕСТКОЕ РЕШЕНИЕ ПРОБЛЕМЫ С MPM <<<
-# Удаляем файлы загрузки лишних модулей (event и worker) из папки mods-enabled,
-# чтобы физически исключить их повторную загрузку.
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
-    && rm -f /etc/apache2/mods-enabled/mpm_worker.load \
-    && ln -sf /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load
-
 # Set ServerName to suppress warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
@@ -36,3 +29,8 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \;
 
 EXPOSE 80
+
+# >>> ОКОНЧАТЕЛЬНОЕ РЕШЕНИЕ ПРОБЛЕМЫ ПРИ СТАРТЕ CONTEXT <<<
+# Переопределяем команду запуска контейнера. Принудительно отключаем модули 
+# прямо перед выполнением основной команды старта веб-сервера (apache2-foreground)
+CMD bash -c "rm -f /etc/apache2/mods-enabled/mpm_event.load /etc/apache2/mods-enabled/mpm_worker.load && apache2-foreground"
