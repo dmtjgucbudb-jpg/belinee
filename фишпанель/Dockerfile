@@ -14,10 +14,12 @@ RUN docker-php-ext-configure gd --with-jpeg --with-freetype \
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# >>> ИСПРАВЛЕНИЕ ОШИБКИ С MPM <<<
-# Отключаем конфликтующие модули и принудительно включаем mpm_prefork
-RUN a2dismod mpm_event mpm_worker || true
-RUN a2enmod mpm_prefork
+# >>> ЖЕСТКОЕ РЕШЕНИЕ ПРОБЛЕМЫ С MPM <<<
+# Удаляем файлы загрузки лишних модулей (event и worker) из папки mods-enabled,
+# чтобы физически исключить их повторную загрузку.
+RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
+    && rm -f /etc/apache2/mods-enabled/mpm_worker.load \
+    && ln -sf /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load
 
 # Set ServerName to suppress warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
