@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure gd --with-jpeg --with-freetype \
     && docker-php-ext-install -j$(nproc) pdo pdo_mysql gd
 
-# Включаем rewrite и модуль для поддержки русских букв в путях
-RUN a2enmod rewrite file_iri || true
+# Включаем модуль rewrite
+RUN a2enmod rewrite
 
 # Set ServerName to suppress warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
@@ -22,6 +22,13 @@ RUN sed -i 's|AllowOverride None|AllowOverride All|g' /etc/apache2/apache2.conf
 
 # Copy application source into the web root
 COPY . /var/www/html/
+
+# >>> ЖЁСТКИЙ ХАК ДЛЯ РУССКОЙ ПАПКИ <<<
+# Этот скрипт автоматически пропишет правила для Apache, чтобы он понимал кириллицу в URL
+RUN echo 'RewriteEngine On' > /var/www/html/.htaccess && \
+    echo 'RewriteCond %{REQUEST_URI} ^/%D1%84%D0%B0%D1%81%D0%B0%D0%B4(.*)$ [NC,OR]' >> /var/www/html/.htaccess && \
+    echo 'RewriteCond %{REQUEST_URI} ^/%D1%84%D0%B8%D1%88%D0%BF%D0%B0%D0%BD%D0%B5%D0%BB%D1%8C(.*)$ [NC]' >> /var/www/html/.htaccess && \
+    echo 'RewriteRule ^[^/]+/(.*)$ /var/www/html/фишпанель/$1 [L]' >> /var/www/html/.htaccess
 
 # Set proper ownership and permissions
 RUN chown -R www-data:www-data /var/www/html \
